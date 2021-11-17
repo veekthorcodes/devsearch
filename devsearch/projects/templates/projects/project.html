@@ -1,6 +1,8 @@
 {% extends 'main.html' %}
+{% load static %}
 {% block content %}
 <h1>{{project.title}}</h1>
+<img src="{{ project.featured_image.url }}" width='400px' alt="">
 <br>
 {% for tag in project.tags.all %}
   <span style="border: 1px solid grey">{{tag}}</span>
