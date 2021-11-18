@@ -15,11 +15,23 @@ def profileUpdated(sender, instance, created, **kwargs):
         )
 
 
-post_save.connect(profileUpdated, sender=User)
+def profileEdited(sender, instance, created, **kwargs):
+    profile = instance
+    user = profile.user
+
+    if created == False:
+        user.first_name = profile.name
+        user.username = profile.username
+        user.email = profile.email
+        user.save()
 
 
 def deleteUser(sender, instance, **kwargs):
     user = instance.user
     user.delete()
 
+
+
+post_save.connect(profileUpdated, sender=User)
 post_delete.connect(deleteUser, sender=Profile)
+post_save.connect(profileEdited, sender=Profile)
