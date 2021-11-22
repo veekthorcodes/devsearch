@@ -5,7 +5,8 @@ from django.contrib.auth.models import User
 from .forms import CustomUserCreationForm, ProfileForm, SkillForm
 from django.contrib import messages
 from .models import Profile
-from .utils import searchProfile
+from .utils import searchProfile, paginateProfiles
+
 
 def loginUser(request):
     if request.method == 'POST':
@@ -61,7 +62,13 @@ def logoutUser(request):
 
 def profiles(request):
     search_query, profiles = searchProfile(request)
-    context = {'profiles': profiles, 'search_query': search_query}
+    custom_range, profiles = paginateProfiles(request, profiles, 3)
+
+    context = {
+        'profiles': profiles,
+        'custom_range': custom_range,
+        'search_query': search_query
+    }
     return render(request, 'users/profiles.html', context)
 
 
@@ -138,7 +145,6 @@ def updateSkill(request, pk):
     return render(request, 'users/skillForm.html', context)
 
 
-
 @login_required(login_url='login')
 def deleteSkill(request, pk):
     profile = request.user.profile
@@ -148,5 +154,5 @@ def deleteSkill(request, pk):
         skill.delete()
         return redirect('account')
 
-    context = {'object':skill}
+    context = {'object': skill}
     return render(request, 'deleteTemplate.html', context)
