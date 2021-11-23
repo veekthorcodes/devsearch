@@ -1,16 +1,19 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Project
-from .forms import ProjectForm
+from .forms import ProjectForm, ReviewForm
 from .utils import searchProject, paginateProjects
+
+from django.contrib import messages
+
 
 def projects(request):
     search_query, projects = searchProject(request)
     custom_range, projects = paginateProjects(request, projects, 3)
 
     context = {
-        "projects": projects, 
-        'search_query':search_query, 
+        "projects": projects,
+        'search_query': search_query,
         'custom_range': custom_range
     }
     return render(request, 'projects/projects.html', context)
@@ -18,7 +21,25 @@ def projects(request):
 
 def project(request, pk):
     projectObj = Project.objects.get(id=pk)
-    context = {'project': projectObj}
+    form = ReviewForm()
+
+    if request.method == 'POST':
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.project = projectObj
+            review.owner = request.user.profile
+            review.save()
+
+            projectObj.getVotes
+            messages.success(request, 'comment added successfully!')
+            return redirect('project', pk=projectObj.id)
+            
+
+    context = {
+        'project': projectObj,
+        'form': form
+    }
     return render(request, 'projects/project.html', context)
 
 
@@ -37,19 +58,18 @@ def createProject(request):
     return render(request, 'projects/projectForm.html', context)
 
 
-
 @login_required(login_url='login')
 def updateProject(request, pk):
     profile = request.user.profile
     project = profile.project_set.get(id=pk)
     form = ProjectForm(instance=project)
-    
+
     if request.method == 'POST':
         form = ProjectForm(request.POST, request.FILES, instance=project)
         if form.is_valid():
             form.save()
             return redirect('account')
-        
+
     context = {"form": form}
     return render(request, 'projects/projectForm.html', context)
 
@@ -61,8 +81,6 @@ def deleteProject(request, pk):
     if request.method == 'POST':
         project.delete()
         return redirect('account')
-    
-    context = {'object':project}
-    return render(request, 'deleteTemplate.html', context)
-    
 
+    context = {'object': project}
+    return render(request, 'deleteTemplate.html', context)
