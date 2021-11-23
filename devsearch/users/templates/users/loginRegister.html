@@ -19,12 +19,9 @@
       {% for field in form %}
       <div class="form__field">
         <label for="formInput#text">{{field.label}}</label>
-        {{field}}
-        {% if field.errors %}
-        {% for error in field.errors %}
-        <small style="color:red">{{ error }}</small>
-        {% endfor %}
-        {% endif %}
+        {{field}} {% if field.errors %} {% for error in field.errors %}
+        <small style="color: red">{{ error }}</small>
+        {% endfor %} {% endif %}
       </div>
       {% endfor %}
 
@@ -78,7 +75,7 @@
       </div>
       <div class="auth__actions">
         <input class="btn btn--sub btn--lg" type="submit" value="Log In" />
-        <a href="forgetpassword.html">Forget Password?</a>
+        <a href="{% url 'reset_password' %}">Forget Password?</a>
       </div>
     </form>
     <div class="auth__alternative">
@@ -89,5 +86,4 @@
 </div>
 
 {% endif %} 
-
 {% endblock content %}
