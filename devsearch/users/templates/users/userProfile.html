@@ -47,7 +47,9 @@
               </li>
               {% endif %}
             </ul>
-            <a href="#" class="btn btn--sub btn--lg">Send Message </a>
+            {% if request.user.profile.id != profile.id %}
+            <a href="{% url 'create-message' profile.id %}" class="btn btn--sub btn--lg">Send Message </a>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -78,7 +80,7 @@
         <div class="devInfo">
           <h3 class="devInfo__title">Projects</h3>
           <div class="grid grid--two">
-            {% for project in profile.project_set.all %}
+            {% for project in projects %}
             <div class="column">
               <div class="card project">
                 <a href="{% url 'project' project.id %}" class="project">
@@ -111,6 +113,7 @@
             </div>
             {% endfor %}
           </div>
+          {% include 'pagination.html' with queryset=projects %}
         </div>
       </div>
     </div>

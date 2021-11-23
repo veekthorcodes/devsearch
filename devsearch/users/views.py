@@ -2,10 +2,11 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from .forms import CustomUserCreationForm, ProfileForm, SkillForm
+from .forms import CustomUserCreationForm, ProfileForm, SkillForm, MessageForm
 from django.contrib import messages
-from .models import Profile
+from .models import Profile, Message
 from .utils import searchProfile, paginateProfiles
+from projects.utils import paginateProjects
 
 
 def loginUser(request):
@@ -72,15 +73,18 @@ def profiles(request):
     return render(request, 'users/profiles.html', context)
 
 
-@login_required(login_url='login')
 def userProfile(request, pk):
     profile = Profile.objects.get(id=pk)
     topSkills = profile.skill_set.exclude(description__exact='')
     otherSkills = profile.skill_set.filter(description='')
+    projects = profile.project_set.all()
+    custom_range, projects = paginateProjects(request, projects, 4)
     context = {
         'profile': profile,
         'topSkills': topSkills,
         'otherSkills': otherSkills,
+        'projects': projects,
+        'custom_range':custom_range,
     }
     return render(request, 'users/userProfile.html', context)
 
@@ -90,7 +94,13 @@ def userAccount(request):
     profile = request.user.profile
     skills = profile.skill_set.all()
     projects = profile.project_set.all()
-    context = {'profile': profile, 'skills': skills, 'projects': projects}
+    custom_range, projects = paginateProjects(request, projects, 3)
+    context = {
+        'profile': profile,
+        'skills': skills,
+        'projects': projects,
+        'custom_range': custom_range
+    }
     return render(request, 'users/account.html', context)
 
 
@@ -156,3 +166,61 @@ def deleteSkill(request, pk):
 
     context = {'object': skill}
     return render(request, 'deleteTemplate.html', context)
+
+
+def inbox(request):
+    profile = request.user.profile
+    inbox = profile.messages.all()
+    unreadMessages = profile.messages.filter(is_read=False).count()
+
+    context = {
+        'inbox': inbox,
+        'unreadMessages': unreadMessages
+    }
+    return render(request, 'users/inbox.html', context)
+
+
+@login_required(login_url='login')
+def viewMessage(request, pk):
+    profile = request.user.profile
+    queriedMessage = profile.messages.get(id=pk)
+
+    if queriedMessage.is_read == False:
+        queriedMessage.is_read = True
+        queriedMessage.save()
+
+    context = {
+        'message': queriedMessage
+    }
+    return render(request, 'users/message.html', context)
+
+
+def createMessage(request, pk):
+    recipient = Profile.objects.get(id=pk)
+    form = MessageForm()
+
+    try:
+        sender = request.user.profile
+    except:
+        sender = None
+
+    if request.method == 'POST':
+        form = MessageForm(request.POST)
+        if form.is_valid():
+            message = form.save(commit=False)
+            message.sender = sender
+            message.recipient = recipient
+
+            if sender:
+                message.name = sender.name
+                message.email = sender.email
+
+            message.save()
+            messages.success(request, 'message sent!')
+            return redirect('user-profile', pk=recipient.id)
+
+    context = {
+        'form': form,
+        'recipient': recipient,
+    }
+    return render(request, 'users/messageForm.html', context)
