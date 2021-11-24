@@ -20,7 +20,7 @@ class Project(models.Model):
                           primary_key=True, unique=True, editable=False)
 
     class Meta:
-        ordering = ['-vote_total', '-vote_ratio', '-title']
+        ordering = ['-vote_ratio', '-vote_total', '-title']
 
     def __str__(self):
         return self.title
