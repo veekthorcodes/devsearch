@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .models import Project
+from .models import Project, Tag
 from .forms import ProjectForm, ReviewForm
 from .utils import searchProject, paginateProjects
 
@@ -65,12 +65,21 @@ def updateProject(request, pk):
     form = ProjectForm(instance=project)
 
     if request.method == 'POST':
+        tags = request.POST.get('newtags').replace(",", " ").split()
+        print(tags)
+
         form = ProjectForm(request.POST, request.FILES, instance=project)
         if form.is_valid():
-            form.save()
+            project = form.save()
+            for tag in tags:
+                tag, created = Tag.objects.get_or_create(name=tag)
+                project.tags.add(tag)
             return redirect('account')
 
-    context = {"form": form}
+    context = {
+        "form": form,
+        'project': project
+    }
     return render(request, 'projects/projectForm.html', context)
 
 
