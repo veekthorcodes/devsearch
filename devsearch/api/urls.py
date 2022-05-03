@@ -1,11 +1,10 @@
-from django.urls import path 
-from . import views 
+from django.urls import path
+from . import views
 
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-
 
 urlpatterns = [
     path('users/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
@@ -13,7 +12,8 @@ urlpatterns = [
 
     path('', views.getRoutes),
     path('projects/', views.getProjects),
-    path('project/<str:pk>/', views.getProject),
-    path('project/<str:pk>/vote/', views.projectVote),
-    path('remove-tag/', views.removeTag),
+    path('projects/<str:pk>/', views.getProject),
+    path('projects/<str:pk>/vote/', views.projectVote),
+
+    path('remove-tag/', views.removeTag)
 ]
